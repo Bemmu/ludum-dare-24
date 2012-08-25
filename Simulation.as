@@ -5,7 +5,6 @@ package {
 	public class Simulation {
 		var vertices;
 		var bounds;
-		var angularJoints;
 		var springs;
 		var gravity = 0.25;
 		var buffer;
@@ -19,25 +18,10 @@ package {
 			this.buffer = buffer;
 			this.spritesheetBitmapData = spritesheetBitmapData;
 
-			vertices = [
-/*				{'x' : 50, 'y' : 40, 'sprite' : 1}, // torso 0
-				{'x' : 50, 'y' : 60, 'sprite' : 0}, // hips 1
-				{'x' : 30, 'y' : 100, 'sprite' : 0}, // left leg 2
-				{'x' : 70, 'y' : 100, 'sprite' : 0} // right leg 3
-*/
-//				{'x' : 50, 'y' : 18}, // head
-//				{'x' : 15, 'y' : 40}, // left hand
-//				{'x' : 85, 'y' : 40}, // right hand
-
-/*				{'x' : 10, 'y' : 10, 'prevX' : 10, 'prevY' : 10},
-				{'x' : 70, 'y' : 10, 'prevX' : 70, 'prevY' : 10}*/
-			];
+			vertices = [];
 			springs = [];
 
 			var map_xy_to_vertex = {};
-
-/*			var creatureBitmapData = new BitmapData(32, 32);
-			creatureBitmapData.copyPixels(spritesheetBitmapData, new Rectangle(0, 32, 32, 32), new Point(0, 0));*/
 
 			var creatureBitmapData = creature.bitmapdata;
 			var nextNeededCreatureValue = 0;
@@ -116,25 +100,6 @@ package {
 				vertices[k]['y'] *= vertexScale;
 			} 
 
-			angularJoints = [
-//				{'a' : 2, 'middle' : 1, 'b' : 3, 'amplitude' : 0, 'frequency' : 0.1},
-//				{'a' : 0, 'middle' : 1, 'b' : 2, 'amplitude' : 0, 'frequency' : 0.01}
-			];
-
-/*			springs = [
-				// Skeleton
-				{'a' : 0, 'b' : 1},
-				{'a' : 1, 'b' : 2, 'amplitude' : 10, 'frequency' : 0.1},
-				{'a' : 1, 'b' : 3, 'amplitude' : 10, 'frequency' : 0.1},
-
-				// Leg distance enforcer
-				{'a' : 2, 'b' : 3, 'elasticity' : 0.2},
-
-				// Torso distance enforcer
-				{'a' : 2, 'b' : 0, 'elasticity' : 0.2},
-				{'a' : 3, 'b' : 0, 'elasticity' : 0.2}
-			];*/
-
 			var i, vertex, spring, joint;
 
 			var xPush = 0, yPush = 0;
@@ -159,88 +124,7 @@ package {
 			// Be satisfied by the initial angles between angular joints
 			initOrTickAngularJoints();
 		}
-
-		function initOrTickAngularJoints() {
-			var i, ax, ay, bx, by;
-
-			// Angular joints
-			for (i = 0; i < angularJoints.length; i++) {
-				var joint = angularJoints[i];
-
-				ax = vertices[joint['a']]['x'];
-				ay = vertices[joint['a']]['y'];
-				bx = vertices[joint['b']]['x'];
-				by = vertices[joint['b']]['y'];
-
-				var middlex = vertices[joint['middle']]['x'];
-				var middley = vertices[joint['middle']]['y'];
-				var desiredAngle = joint['desiredAngle'];
-
-				ax -= middlex; ay -= middley;
-				bx -= middlex; by -= middley;
-
-				// Snap to unit circle
-				var ascale = Math.sqrt(ax*ax + ay*ay);
-				var bscale = Math.sqrt(bx*bx + by*by);
-				ax /= ascale; ay /= ascale;
-				bx /= bscale; by /= bscale;
-
-				// Rotate so that a is horizontal
-				var aangle = Math.atan2(ay, ax);
-				var bangle = Math.atan2(by, bx);
-
-				var rotation = aangle;
-				aangle -= rotation;
-				bangle -= rotation;
-
-				// Clip bangle to -Math.PI .. Math.PI range
-				var clipped = bangle;
-//				while (clipped < -Math.PI) clipped += Math.PI * 2;
-//				while (clipped >= Math.PI) clipped -= Math.PI * 2;
-
-				trace(clipped);
-
-				if (!desiredAngle) {
-					joint['desiredAngle'] = clipped;
-					return
-				}
-
-/*				var waviness = Math.sin(tickCounter * joint['frequency']) * joint['amplitude'];
-				desiredAngle += waviness;
-*/
-				// Angle not enough? Add a tad.
-				var angleChange = (desiredAngle - clipped)/2;
-
-				if (angleChange > 1) {
-					trace('aangle:' + aangle);
-					trace('bangle:' + bangle);
-					trace('rotation:' + rotation);
-					trace(angleChange);
-				}
-
-				aangle -= angleChange;
-				bangle += angleChange;
-
-				// Now rewind operations.
-				aangle += rotation;
-				bangle += rotation;
-				ax = Math.cos(aangle) * ascale + middlex;
-				ay = Math.sin(aangle) * ascale + middley;
-				bx = Math.cos(bangle) * bscale + middlex;
-				by = Math.sin(bangle) * bscale + middley;
-
-				vertices[joint['a']]['x'] = ax;
-				vertices[joint['a']]['y'] = ay;
-				vertices[joint['b']]['x'] = bx;
-				vertices[joint['b']]['y'] = by;
-			}
-
-		}
-
 		public function tick() {
-//			return;
-
-
 			var i, vertex, ax, ay, bx, by;
 			tickCounter++;
 
@@ -290,8 +174,6 @@ package {
 				vertices[spring['b']]['y'] = by;
 			}			
 
-			initOrTickAngularJoints();
-
 			// Bounds checking
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
@@ -333,11 +215,6 @@ package {
 					new Point(0,0),
 					true
 				);
-/*
-				buffer.setPixel(
-					vertex['x'], vertex['y'],
-					0xff000000
-				);*/
 			}
 		}
 
