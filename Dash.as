@@ -11,5 +11,10 @@ package {
 		override public function layout(i) {
 			return new Point(150, 100 + i * 150)
 		}
+
+		override public function setPrefs() {
+			xPush = 1.5;
+			yPush = -1;
+		}
 	}
 }

@@ -13,9 +13,19 @@ package {
 		var tickCounter = 0;
 		var bounciness = 0;
 		var compoScreen;
-		var musclesEnabled;
+		var musclesEnabled = true;
+		var FRICTION_THRESHOLD = 1.5;
+		var FRICTION = 0.2;
+		var SPRING_BREAK_THRESHOLD = 0.7;
+		var uniformMass = false;
+		var doBlueConnections = true;
+		var lastExplosionTick = 0;
+		var MAX_EXPLOSION_FREQUENCY = 10;
+		var xPush = 0, yPush = 0;
+		var BREAK_EXPLOSION = 0.5;
+		var hasTouchedGround = false;
 
-		// How to put simulations of this kind next to each other
+		// How to visually put simulations of this kind next to each other
 		public function layout(i) {
 			return new Point(150, 100 + i * 150)
 		}
@@ -24,10 +34,13 @@ package {
 			active = true;
 		}
 
-		// Different types of vertices like head, foot, hand just to make it look more human.
+		// Opportunity for child to override something before springs are made
+		public function setPrefs() {			
+		}
 
 		public function Simulation(buffer:BitmapData, spritesheetBitmapData:BitmapData, creature:Creature) {
-			this.musclesEnabled = true;
+			setPrefs();
+
 			this.active = false;
 			this.compoScreen = compoScreen;
 			this.buffer = buffer;
@@ -49,7 +62,12 @@ package {
 					var p = creatureBitmapData.getPixel32(x, y);
 
 					if (p == BLACK || p == BLUE) {
-						var mass = p == BLACK ? 0.05 : 1;
+						var mass;
+						if (uniformMass) {
+							mass = 0.05;
+						} else {
+							mass = p == BLACK ? 0.05 : 0.8;
+						}
 
 						var index = vertices.length;
 						var mapStr = x + '_' + y;
@@ -84,14 +102,16 @@ package {
 
 			// Additionally every blue pixel should be rigidly connected to every other blue pixel
 			var bluePixels = [];
-			for (y = 0; y < 32; y++) {
-				for (x = 0; x < 32; x++) {
-					p = creatureBitmapData.getPixel32(x, y);
-					if (p == BLUE) {
-						bluePixels.push(x + '_' + y);
+			if (doBlueConnections) {
+				for (y = 0; y < 32; y++) {
+					for (x = 0; x < 32; x++) {
+						p = creatureBitmapData.getPixel32(x, y);
+						if (p == BLUE) {
+							bluePixels.push(x + '_' + y);
+						}
 					}
-				}
-			}	
+				}	
+			}
 
 			for (var l = 0; l < bluePixels.length; l++) {
 				for (var m = 0; m < l; m++) {
@@ -116,13 +136,11 @@ package {
 
 			var i, vertex, spring, joint;
 
-			var xPush = 0, yPush = 0;
-
 			// No energy in the system at first
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
-				vertex['prevX'] = vertex['x'] - xPush * Math.random();
-				vertex['prevY'] = vertex['y'] - yPush * Math.random();
+				vertex['prevX'] = vertex['x'] - xPush;// * Math.random();
+				vertex['prevY'] = vertex['y'] - yPush;// * Math.random();
 			}
 
 			// Be satisfied by initial distances for springs
@@ -135,6 +153,7 @@ package {
 				spring['desiredDistance'] = Math.sqrt((ax-bx)*(ax-bx) + (ay-by)*(ay-by));
 			}
 		}
+
 		public function tick() {
 			if (!active) return;
 
@@ -144,12 +163,14 @@ package {
 			// Apply gravity
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
-				vertex['y'] += gravity * vertex['mass'];
+				vertex['y'] += gravity * vertex['mass']; // hey it's what people used to believe!
 			}
 
 			// Springs
 			for (i = 0; i < springs.length; i++) {
 				var spring = springs[i];
+				if (spring['broken']) continue;
+
 				ax = vertices[spring['a']]['x'];
 				ay = vertices[spring['a']]['y'];
 				bx = vertices[spring['b']]['x'];
@@ -174,6 +195,13 @@ package {
 				}
 
 				var coeff = 1 * (1-elasticity) + (desiredDistance / dist) * elasticity;
+				if (coeff < SPRING_BREAK_THRESHOLD) {
+					spring['broken'] = true;
+					if (tickCounter - lastExplosionTick > MAX_EXPLOSION_FREQUENCY) {
+						lastExplosionTick = tickCounter;
+						(new Explosion()).play();
+					} 
+				}
 				ax *= coeff; ay *= coeff;
 				bx *= coeff; by *= coeff;
 
@@ -181,10 +209,10 @@ package {
 				ax += midx; ay += midy;
 				bx += midx; by += midy;
 
-				vertices[spring['a']]['x'] = ax;
-				vertices[spring['a']]['y'] = ay;
-				vertices[spring['b']]['x'] = bx;
-				vertices[spring['b']]['y'] = by;
+				vertices[spring['a']]['x'] = ax + (spring['broken'] ? (Math.random() - 0.5) * BREAK_EXPLOSION : 0);
+				vertices[spring['a']]['y'] = ay + (spring['broken'] ? (Math.random() - 0.5) * BREAK_EXPLOSION : 0);
+				vertices[spring['b']]['x'] = bx + (spring['broken'] ? (Math.random() - 0.5) * BREAK_EXPLOSION : 0);
+				vertices[spring['b']]['y'] = by + (spring['broken'] ? (Math.random() - 0.5) * BREAK_EXPLOSION : 0);
 			}			
 
 			// Bounds checking
@@ -192,6 +220,7 @@ package {
 				vertex = vertices[i];
 				if (vertex['y'] >= buffer.height) {
 					vertex['y'] = (1-bounciness) * buffer.height + bounciness * (buffer.height - (vertex['y'] - vertex['prevY']));
+					hasTouchedGround = true;
 				}
 				if (vertex['y'] < 0) {
 					vertex['y'] = 0;
@@ -204,8 +233,6 @@ package {
 				}
 			}
 
-			var FRICTION_THRESHOLD = 3;
-
 			// Continued motion and bounds checking
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
@@ -215,7 +242,7 @@ package {
 
 				// Can't move so well if touching ground?
 				if (Math.abs(vertex['y'] - buffer.height) < FRICTION_THRESHOLD) {
-					vertex['x'] += 0;//(vertex['x'] - vertex['prevX']) * 1.01;
+					vertex['x'] += (vertex['x'] - vertex['prevX']) * FRICTION;
 				} else {
 					vertex['x'] += vertex['x'] - vertex['prevX'];
 				}

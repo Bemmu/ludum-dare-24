@@ -8,18 +8,139 @@ package {
 		var frequencies;
 		var phases;
 
-		public function Creature(bitmapdata:BitmapData) {
+		public function Creature(bitmapdata:BitmapData, amplitudes = null, frequencies = null, phases = null) {
 			this.bitmapdata = bitmapdata.clone();
+
+			if (amplitudes) this.amplitudes = amplitudes.slice(0);
+			if (frequencies) this.frequencies = frequencies.slice(0);
+			if (phases) this.phases = phases.slice(0);
 
 			this.amplitudes = [];
 			this.frequencies = [];
 			this.phases = [];
 
 			for (var i = 0; i < 100; i++) {
-				this.amplitudes.push(Math.random() * Math.random() * 50);
+				this.amplitudes.push(Math.random() * Math.random() * Math.random() * 50);
 				this.frequencies.push(Math.random() * 0.3);
 				this.phases.push(Math.random() * Math.PI * 2);
 			}
+		}
+
+		function isConnected(bmp) {
+			var bmp = bmp.clone(); // make working copy so we can mark pixels
+
+			// Start exploring from the first nontransparent pixel
+			var fx = null, fy = null;
+			for (var y = 0; y < bmp.height; y++) {
+				for (var x = 0; x < bmp.width; x++) {
+					var color = bmp.getPixel32(x, y) && 0xff000000;
+					if (color > 0) {
+						fx = x; 
+						fy = y;
+						break;
+					}
+				}
+				if (fx != null) break;
+			}
+
+			// Pure transparent, let's say that isn't connected?
+			if (fx == null) {
+				return false;
+			}
+
+			var todo = [{'x':fx, 'y':fy}];
+			var directions;
+
+			while (todo.length > 0) {
+				var item = todo.pop();
+//				trace(todo.length + ' items left');
+				bmp.setPixel32(item['x'], item['y'], 0);
+
+				fx = item['x']; fy = item['y'];
+				directions = [[fx-1,fy],[fx+1,fy],[fx,fy+1],[fx,fy-1],[fx-1,fy-1],[fx+1,fy+1],[fx-1,fy+1],[fx+1,fy-1]];
+				for (var j = 0; j < directions.length; j++) {
+					// Already on todo list?
+					var entry = {'x':directions[j][0],'y':directions[j][1]};
+					var already = false;
+					for (var k = 0; k < todo.length; k++) {
+						if (todo[k]['x'] == entry['x'] && todo[k]['y'] == entry['y']) {
+							already = true;
+						}
+					}
+					if (already) continue;
+
+					if ((bmp.getPixel32(entry['x'], entry['y']) && 0xff000000) > 0) {
+//						trace('Explore to ' + entry['x'] + ', ' + entry['y']);
+						todo.push(entry);
+					}
+				}
+			}
+
+			// Now if there are any nonzero pixels left then not connected
+			for (y = 0; y < bmp.height; y++) {
+				for (x = 0; x < bmp.height; x++) {
+					if ((bmp.getPixel32(x, y) && 0xff000000) > 0) {
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
+		function identicalBitmaps(a, b) {
+			for (var y = 0; y < 32; y++) {
+				for (var x = 0; x < 32; x++) {
+					if (a.getPixel32(x,y) != b.getPixel32(x,y)) return false;
+				}
+			}
+			return true;
+		}
+
+		public function makeMutant() {
+
+			// Should also see that it really changed
+
+			// Copy random areas around but don't allow disconnection
+			var cont = true;
+			var disconnected = true;
+//			disconnected = !isConnected(bmp);
+
+//			return new Creature(bmp, amplitudes, frequencies, phases);
+
+			var bmp;
+			var maxLoops = 5;
+			while (disconnected) {
+				bmp = bitmapdata.clone();
+				while (cont) {
+					var xPos = int(Math.random() * 32);
+					var yPos = int(Math.random() * 32);
+					var width = int(Math.random() * (32 - xPos));
+					var height = int(Math.random() * (32 - yPos));
+
+					var before = bmp.clone();
+					bmp.copyPixels(
+						bmp,
+						new Rectangle(xPos, yPos, width, height),
+						new Point(int(Math.random() * 32), int(Math.random() * 32)),
+						null, new Point(0,0), true						
+					);
+					if (identicalBitmaps(bmp, before)) {
+						trace('Doing again as change had no effect');
+						cont = true;	
+					} else {
+						cont = false;//Math.random() < 0.5;
+					}
+				}
+				maxLoops--;
+				if (maxLoops == 0) {
+					trace('Giving up trying to find a connected mutant');
+					break;
+				}
+				disconnected = !isConnected(bmp);
+			}
+
+			return new Creature(bmp, amplitudes, frequencies, phases);
 		}
 
 		public function getAmplitude(i) {
