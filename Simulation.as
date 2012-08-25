@@ -3,6 +3,7 @@ package {
 	import flash.geom.*;
 
 	public class Simulation {
+		public var active;
 		var vertices;
 		var bounds;
 		var springs;
@@ -11,10 +12,17 @@ package {
 		var spritesheetBitmapData;
 		var tickCounter = 0;
 		var bounciness = 0;
+		var compoScreen;
+
+		public function start() {
+			active = true;
+		}
 
 		// Different types of vertices like head, foot, hand just to make it look more human.
 
 		public function Simulation(buffer:BitmapData, spritesheetBitmapData:BitmapData, creature:Creature) {
+			this.active = false;
+			this.compoScreen = compoScreen;
 			this.buffer = buffer;
 			this.spritesheetBitmapData = spritesheetBitmapData;
 
@@ -121,6 +129,8 @@ package {
 			}
 		}
 		public function tick() {
+			if (!active) return;
+
 			var i, vertex, ax, ay, bx, by;
 			tickCounter++;
 
@@ -214,8 +224,11 @@ package {
 				vertex = vertices[i];
 				maxX = Math.max(vertex['x'], maxX);
 			}
-			trace('Reporting ' + maxX + ' as fitness');
 			return maxX;
+		}
+
+		public function isWinner() {
+			return fitness() >= 500;
 		}
 
 		public function render() {
