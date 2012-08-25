@@ -11,8 +11,8 @@ package {
 		public function Creature(bitmapdata:BitmapData) {
 			this.bitmapdata = bitmapdata.clone();
 			// setting first 3 to 30 gives arm waving
-			this.amplitudes = [0,0,0,0,0,30];
-			this.frequencies = [0,0,0,0,0,0.1];
+			this.amplitudes = [30];
+			this.frequencies = [0.1];
 		}
 
 		public function getAmplitude(i) {

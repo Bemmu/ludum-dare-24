@@ -120,9 +120,6 @@ package {
 				var by = vertices[spring['b']]['y'];
 				spring['desiredDistance'] = Math.sqrt((ax-bx)*(ax-bx) + (ay-by)*(ay-by));
 			}
-
-			// Be satisfied by the initial angles between angular joints
-			initOrTickAngularJoints();
 		}
 		public function tick() {
 			var i, vertex, ax, ay, bx, by;
@@ -191,16 +188,27 @@ package {
 				}
 			}
 
+			var FRICTION_THRESHOLD = 3;
+
 			// Continued motion and bounds checking
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
 				var newPrevX = vertex['x'];
 				var newPrevY = vertex['y'];
-				vertex['x'] += vertex['x'] - vertex['prevX'];
 				vertex['y'] += vertex['y'] - vertex['prevY'];
+
+				// Can't move so well if touching ground?
+				if (Math.abs(vertex['y'] - buffer.height) < FRICTION_THRESHOLD) {
+					vertex['x'] += 0;//(vertex['x'] - vertex['prevX']) * 1.01;
+				} else {
+					vertex['x'] += vertex['x'] - vertex['prevX'];
+				}
+
 				vertex['prevX'] = newPrevX;
 				vertex['prevY'] = newPrevY;
 			}
+
+
 		}
 
 		public function render() {
