@@ -206,8 +206,16 @@ package {
 				vertex['prevX'] = newPrevX;
 				vertex['prevY'] = newPrevY;
 			}
+		}
 
-
+		public function fitness() {
+			var i, vertex, maxX = 0;
+			for (i = 0; i < vertices.length; i++) {
+				vertex = vertices[i];
+				maxX = Math.max(vertex['x'], maxX);
+			}
+			trace('Reporting ' + maxX + ' as fitness');
+			return maxX;
 		}
 
 		public function render() {
