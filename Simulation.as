@@ -7,7 +7,7 @@ package {
 		var bounds;
 		var angularJoints;
 		var springs;
-		var gravity = 0.025;
+		var gravity = 0.25;
 		var buffer;
 		var spritesheetBitmapData;
 		var tickCounter = 0;

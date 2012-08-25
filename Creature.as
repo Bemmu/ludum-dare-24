@@ -10,6 +10,10 @@ package {
 
 		public function Creature(bitmapdata:BitmapData) {
 			this.bitmapdata = bitmapdata.clone();
+//			this.amplitudes = [30,30,30];
+//			this.frequencies = [0.1,0.1,0.1];
+			this.amplitudes = [0,0,0,0,0,30];
+			this.frequencies = [0,0,0,0,0,0.1];
 		}
 
 		public function getAmplitude(i) {
