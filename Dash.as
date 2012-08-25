@@ -13,8 +13,8 @@ package {
 		}
 
 		override public function setPrefs() {
-			xPush = 1.5;
-			yPush = -1;
+			xPush = 1;
+			yPush = -0.7;
 		}
 	}
 }

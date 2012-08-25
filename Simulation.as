@@ -15,7 +15,7 @@ package {
 		var compoScreen;
 		var musclesEnabled = true;
 		var FRICTION_THRESHOLD = 1.5;
-		var FRICTION = 0.2;
+		var FRICTION = 0.4;
 		var SPRING_BREAK_THRESHOLD = 0.7;
 		var uniformMass = false;
 		var doBlueConnections = true;
@@ -24,6 +24,7 @@ package {
 		var xPush = 0, yPush = 0;
 		var BREAK_EXPLOSION = 0.5;
 		var hasTouchedGround = false;
+		var margin = 5;
 
 		// How to visually put simulations of this kind next to each other
 		public function layout(i) {
@@ -218,18 +219,18 @@ package {
 			// Bounds checking
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
-				if (vertex['y'] >= buffer.height) {
-					vertex['y'] = (1-bounciness) * buffer.height + bounciness * (buffer.height - (vertex['y'] - vertex['prevY']));
+				if (vertex['y'] >= buffer.height - margin) {
+					vertex['y'] = (1-bounciness) * (buffer.height-margin) + bounciness * ((buffer.height-margin) - (vertex['y'] - vertex['prevY']));
 					hasTouchedGround = true;
 				}
-				if (vertex['y'] < 0) {
-					vertex['y'] = 0;
+				if (vertex['y'] < margin) {
+					vertex['y'] = margin;
 				}
-				if (vertex['x'] >= buffer.width) {
-					vertex['x'] = buffer.width;
+				if (vertex['x'] >= (buffer.width-margin)) {
+					vertex['x'] = (buffer.width-margin);
 				}
-				if (vertex['x'] < 0) {
-					vertex['x'] = 0;
+				if (vertex['x'] < margin) {
+					vertex['x'] = margin;
 				}
 			}
 
@@ -262,11 +263,11 @@ package {
 		}
 
 		public function isWinner() {
-			return fitness() >= 500;
+			return fitness() >= 500 - margin;
 		}
 
 		public function render() {
-			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0xff577AB1);
+			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0/*0xff577AB1*/);
 			for (var i = 0; i < vertices.length; i++) {
 				var vertex = vertices[i];
 				buffer.copyPixels(
