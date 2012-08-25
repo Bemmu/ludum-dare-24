@@ -7,14 +7,15 @@ package {
 		var bounds;
 		var angularJoints;
 		var springs;
-		var gravity = 0.12;
+		var gravity = 0.025;
 		var buffer;
 		var spritesheetBitmapData;
 		var tickCounter = 0;
+		var bounciness = 0;
 
 		// Different types of vertices like head, foot, hand just to make it look more human.
 
-		public function Simulation(buffer:BitmapData, spritesheetBitmapData:BitmapData) {
+		public function Simulation(buffer:BitmapData, spritesheetBitmapData:BitmapData, creature:Creature) {
 			this.buffer = buffer;
 			this.spritesheetBitmapData = spritesheetBitmapData;
 
@@ -35,8 +36,11 @@ package {
 
 			var map_xy_to_vertex = {};
 
-			var creatureBitmapData = new BitmapData(32, 32);
-			creatureBitmapData.copyPixels(spritesheetBitmapData, new Rectangle(0, 32, 32, 32), new Point(0, 0));
+/*			var creatureBitmapData = new BitmapData(32, 32);
+			creatureBitmapData.copyPixels(spritesheetBitmapData, new Rectangle(0, 32, 32, 32), new Point(0, 0));*/
+
+			var creatureBitmapData = creature.bitmapdata;
+			var nextNeededCreatureValue = 0;
 
 			var BLACK = 0xff000000;
 			var BLUE = 0xff0000ff;
@@ -46,13 +50,15 @@ package {
 					var p = creatureBitmapData.getPixel32(x, y);
 
 					if (p == BLACK || p == BLUE) {
+						var mass = p == BLACK ? 0.05 : 1;
+
 						var index = vertices.length;
 						var mapStr = x + '_' + y;
 						trace('mapped ' + mapStr);
 						map_xy_to_vertex[mapStr] = index;
 
 						vertices.push(
-							{'x' : x, 'y' : y, 'sprite' : 0}
+							{'x' : x, 'y' : y, 'sprite' : 0, 'mass' : mass}
 						);
 					}
 				}
@@ -72,7 +78,7 @@ package {
 						if (pixel == BLACK || pixel == BLUE) {
 							var a = map_xy_to_vertex[x + '_' + y];
 							var b = map_xy_to_vertex[c[0] + '_' + c[1]];
-							springs.push({'a' : a, 'b' : b, 'elasticity' : 1});
+							springs.push({'a' : a, 'b' : b, 'elasticity' : 0.2});
 						}
 					}
 				}
@@ -88,13 +94,19 @@ package {
 					}
 				}
 			}	
+
 			for (var l = 0; l < bluePixels.length; l++) {
 				for (var m = 0; m < l; m++) {
 					springs.push({
 						'a' : map_xy_to_vertex[bluePixels[l]],
 						'b' : map_xy_to_vertex[bluePixels[m]],
-						'elasticity' : 1
+						'elasticity' : 1,
+						'amplitude' : creature.getAmplitude(nextNeededCreatureValue), 
+						'frequency' : creature.getFrequency(nextNeededCreatureValue), 
+						'phase' : creature.getPhase(nextNeededCreatureValue)
 					});
+
+					nextNeededCreatureValue++;
 				}
 			}		
 
@@ -235,7 +247,7 @@ package {
 			// Apply gravity
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
-				vertex['y'] += gravity;
+				vertex['y'] += gravity * vertex['mass'];
 			}
 
 			// Springs
@@ -248,7 +260,7 @@ package {
 				var desiredDistance = spring['desiredDistance'];
 
 				if (spring['amplitude']) {
-					var waviness = Math.sin(spring['frequency'] * tickCounter) * spring['amplitude'];
+					var waviness = Math.sin(spring['frequency'] * tickCounter + spring['phase']) * spring['amplitude'];
 					desiredDistance += waviness;
 				}
 
@@ -284,7 +296,7 @@ package {
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
 				if (vertex['y'] >= buffer.height) {
-					vertex['y'] = buffer.height - (vertex['y'] - vertex['prevY']);
+					vertex['y'] = (1-bounciness) * buffer.height + bounciness * (buffer.height - (vertex['y'] - vertex['prevY']));
 				}
 				if (vertex['y'] < 0) {
 					vertex['y'] = 0;
@@ -313,19 +325,19 @@ package {
 			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0xff577AB1);
 			for (var i = 0; i < vertices.length; i++) {
 				var vertex = vertices[i];
-/*				buffer.copyPixels(
+				buffer.copyPixels(
 					spritesheetBitmapData,
 					new Rectangle(0 + vertex['sprite'] * 32, 0, 32, 32),
 					new Point(vertex['x'] - 32/2, vertex['y'] - 32/2),
 					null,
 					new Point(0,0),
 					true
-				);*/
-
+				);
+/*
 				buffer.setPixel(
 					vertex['x'], vertex['y'],
 					0xff000000
-				);
+				);*/
 			}
 		}
 
