@@ -20,26 +20,32 @@ package {
 		}
 
 		function refresh(evt) {
-			sim.tick();
-
-			sim.render();
-
-			backbufferBitmapData.copyPixels(simulationBitmapData, r(simulationBitmapData), new Point(150, 100));
+			for (var i = 0; i < CONCURRENT_SIMS; i++) {
+				var sim = simulations[i];
+				var simulationBitmapData = simulationBitmapDatas[i];
+				sim.tick();
+				sim.render();
+				backbufferBitmapData.copyPixels(simulationBitmapData, r(simulationBitmapData), new Point(150, 100 + i * 150));
+			}
 
 			frontbufferBitmapData.copyPixels(backbufferBitmapData, r(backbufferBitmapData), origo);
 		}
 
-		public function Game(mainTimeline) {
-
-			creatures = [];
+		function startSport() {
+			simulationBitmapDatas = [];
+			simulations = [];
 
 			for (var i = 0; i < CONCURRENT_SIMS; i++) {
 				var simulationBitmapData = new BitmapData(500, 100);
-				simulationBitmapDatas.push(simulationBitmapData);
 				var sim = new Simulation(simulationBitmapData);
+
+				simulationBitmapDatas.push(simulationBitmapData);
+				simulations.push(sim);
 			}
+		}
 
-
+		public function Game(mainTimeline) {
+			startSport();
 			backbufferBitmapData = new BitmapData(mainTimeline.stage.stageWidth, mainTimeline.stage.stageHeight);
 
 			frontbufferBitmapData = backbufferBitmapData.clone();
