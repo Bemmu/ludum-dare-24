@@ -38,7 +38,6 @@ package {
 
 						var index = vertices.length;
 						var mapStr = x + '_' + y;
-						trace('mapped ' + mapStr);
 						map_xy_to_vertex[mapStr] = index;
 
 						vertices.push(
