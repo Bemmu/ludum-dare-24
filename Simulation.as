@@ -19,11 +19,11 @@ package {
 			this.spritesheetBitmapData = spritesheetBitmapData;
 
 			vertices = [
-				{'x' : 50, 'y' : 40, 'sprite' : 1}, // torso 0
+/*				{'x' : 50, 'y' : 40, 'sprite' : 1}, // torso 0
 				{'x' : 50, 'y' : 60, 'sprite' : 0}, // hips 1
 				{'x' : 30, 'y' : 100, 'sprite' : 0}, // left leg 2
 				{'x' : 70, 'y' : 100, 'sprite' : 0} // right leg 3
-
+*/
 //				{'x' : 50, 'y' : 18}, // head
 //				{'x' : 15, 'y' : 40}, // left hand
 //				{'x' : 85, 'y' : 40}, // right hand
@@ -31,13 +31,85 @@ package {
 /*				{'x' : 10, 'y' : 10, 'prevX' : 10, 'prevY' : 10},
 				{'x' : 70, 'y' : 10, 'prevX' : 70, 'prevY' : 10}*/
 			];
+			springs = [];
+
+			var map_xy_to_vertex = {};
+
+			var creatureBitmapData = new BitmapData(32, 32);
+			creatureBitmapData.copyPixels(spritesheetBitmapData, new Rectangle(0, 32, 32, 32), new Point(0, 0));
+
+			var BLACK = 0xff000000;
+			var BLUE = 0xff0000ff;
+
+			for (var y = 0; y < 32; y++) {
+				for (var x = 0; x < 32; x++) {
+					var p = creatureBitmapData.getPixel32(x, y);
+
+					if (p == BLACK || p == BLUE) {
+						var index = vertices.length;
+						var mapStr = x + '_' + y;
+						trace('mapped ' + mapStr);
+						map_xy_to_vertex[mapStr] = index;
+
+						vertices.push(
+							{'x' : x, 'y' : y, 'sprite' : 0}
+						);
+					}
+				}
+			}
+
+			// Make springs between all touching pixels
+			for (y = 0; y < 32; y++) {
+				for (x = 0; x < 32; x++) {
+					p = creatureBitmapData.getPixel32(x, y);
+					if (p != BLACK && p != BLUE) continue;
+
+					var connections = [[x-1,y+1],[x,y+1],[x+1,y+1],[x+1,y]];
+
+					for (var j = 0; j < connections.length; j++) {
+						var c = connections[j];
+						var pixel = creatureBitmapData.getPixel32(c[0], c[1]);
+						if (pixel == BLACK || pixel == BLUE) {
+							var a = map_xy_to_vertex[x + '_' + y];
+							var b = map_xy_to_vertex[c[0] + '_' + c[1]];
+							springs.push({'a' : a, 'b' : b, 'elasticity' : 1});
+						}
+					}
+				}
+			}
+
+			// Additionally every blue pixel should be rigidly connected to every other blue pixel
+			var bluePixels = [];
+			for (y = 0; y < 32; y++) {
+				for (x = 0; x < 32; x++) {
+					p = creatureBitmapData.getPixel32(x, y);
+					if (p == BLUE) {
+						bluePixels.push(x + '_' + y);
+					}
+				}
+			}	
+			for (var l = 0; l < bluePixels.length; l++) {
+				for (var m = 0; m < l; m++) {
+					springs.push({
+						'a' : map_xy_to_vertex[bluePixels[l]],
+						'b' : map_xy_to_vertex[bluePixels[m]],
+						'elasticity' : 1
+					});
+				}
+			}		
+
+			var vertexScale = 3.5;
+			for (var k = 0; k < vertices.length; k++) {
+				vertices[k]['x'] *= vertexScale;
+				vertices[k]['y'] *= vertexScale;
+			} 
 
 			angularJoints = [
 //				{'a' : 2, 'middle' : 1, 'b' : 3, 'amplitude' : 0, 'frequency' : 0.1},
 //				{'a' : 0, 'middle' : 1, 'b' : 2, 'amplitude' : 0, 'frequency' : 0.01}
 			];
 
-			springs = [
+/*			springs = [
 				// Skeleton
 				{'a' : 0, 'b' : 1},
 				{'a' : 1, 'b' : 2, 'amplitude' : 10, 'frequency' : 0.1},
@@ -49,11 +121,11 @@ package {
 				// Torso distance enforcer
 				{'a' : 2, 'b' : 0, 'elasticity' : 0.2},
 				{'a' : 3, 'b' : 0, 'elasticity' : 0.2}
-			];
+			];*/
 
 			var i, vertex, spring, joint;
 
-			var xPush = 2, yPush = 0;
+			var xPush = 0, yPush = 0;
 
 			// No energy in the system at first
 			for (i = 0; i < vertices.length; i++) {
@@ -156,6 +228,7 @@ package {
 		public function tick() {
 //			return;
 
+
 			var i, vertex, ax, ay, bx, by;
 			tickCounter++;
 
@@ -211,7 +284,7 @@ package {
 			for (i = 0; i < vertices.length; i++) {
 				vertex = vertices[i];
 				if (vertex['y'] >= buffer.height) {
-					vertex['y'] = buffer.height;
+					vertex['y'] = buffer.height - (vertex['y'] - vertex['prevY']);
 				}
 				if (vertex['y'] < 0) {
 					vertex['y'] = 0;
@@ -240,14 +313,14 @@ package {
 			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0xff577AB1);
 			for (var i = 0; i < vertices.length; i++) {
 				var vertex = vertices[i];
-				buffer.copyPixels(
+/*				buffer.copyPixels(
 					spritesheetBitmapData,
 					new Rectangle(0 + vertex['sprite'] * 32, 0, 32, 32),
 					new Point(vertex['x'] - 32/2, vertex['y'] - 32/2),
 					null,
 					new Point(0,0),
 					true
-				);
+				);*/
 
 				buffer.setPixel(
 					vertex['x'], vertex['y'],
