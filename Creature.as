@@ -10,9 +10,16 @@ package {
 
 		public function Creature(bitmapdata:BitmapData) {
 			this.bitmapdata = bitmapdata.clone();
-			// setting first 3 to 30 gives arm waving
-			this.amplitudes = [30];
-			this.frequencies = [0.1];
+
+			this.amplitudes = [];
+			this.frequencies = [];
+			this.phases = [];
+
+			for (var i = 0; i < 100; i++) {
+				this.amplitudes.push(Math.random() * Math.random() * 50);
+				this.frequencies.push(Math.random() * 0.3);
+				this.phases.push(Math.random() * Math.PI * 2);
+			}
 		}
 
 		public function getAmplitude(i) {

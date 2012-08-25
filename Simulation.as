@@ -13,6 +13,12 @@ package {
 		var tickCounter = 0;
 		var bounciness = 0;
 		var compoScreen;
+		var musclesEnabled;
+
+		// How to put simulations of this kind next to each other
+		public function layout(i) {
+			return new Point(150, 100 + i * 150)
+		}
 
 		public function start() {
 			active = true;
@@ -21,6 +27,7 @@ package {
 		// Different types of vertices like head, foot, hand just to make it look more human.
 
 		public function Simulation(buffer:BitmapData, spritesheetBitmapData:BitmapData, creature:Creature) {
+			this.musclesEnabled = true;
 			this.active = false;
 			this.compoScreen = compoScreen;
 			this.buffer = buffer;
@@ -149,7 +156,7 @@ package {
 				by = vertices[spring['b']]['y'];
 				var desiredDistance = spring['desiredDistance'];
 
-				if (spring['amplitude']) {
+				if (musclesEnabled && spring['amplitude']) {
 					var waviness = Math.sin(spring['frequency'] * tickCounter + spring['phase']) * spring['amplitude'];
 					desiredDistance += waviness;
 				}
