@@ -8,6 +8,11 @@ package {
 		var frequencies;
 		var phases;
 
+		var BLACK = 0xff000000;
+		var BLUE = 0xff0000ff;
+
+		public var madeFromSpriteSheetSlot = null;
+
 		public function Creature(bitmapdata:BitmapData, amplitudes = null, frequencies = null, phases = null) {
 			this.bitmapdata = bitmapdata.clone();
 
@@ -89,17 +94,72 @@ package {
 		}
 
 		function identicalBitmaps(a, b) {
-			for (var y = 0; y < 32; y++) {
-				for (var x = 0; x < 32; x++) {
-					if (a.getPixel32(x,y) != b.getPixel32(x,y)) return false;
+			for (var y = 3; y < 29; y++) {
+				for (var x = 3; x < 29; x++) {
+					if (a.getPixel32(x,y) == BLACK && b.getPixel32(x,y) != BLACK) return false;
+					if (a.getPixel32(x,y) == BLUE && b.getPixel32(x,y) != BLUE) return false;
 				}
 			}
 			return true;
 		}
 
+		function mutate(bmp) {
+/*			var xPos = 2 + int(Math.random() * (32 - 4));
+			var yPos = 2 + int(Math.random() * (32 - 4));
+			var width = int(Math.random() * (32 - xPos));
+			var height = int(Math.random() * (32 - yPos));
+*/
+			// Extend random corner points
+			var madeChange = false;
+			while (!madeChange) {
+				for (var y = 2; y < 28; y++) {
+					for (var x = 2; x < 28; x++) {
+//						if (Math.random() < 0.95) continue;
+						trace(bmp.getPixel32(x+1,y));
+						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x+1,y) != BLACK) {
+							madeChange = true;
+							bmp.setPixel(x+1,y,0xffffff00);
+						}
+						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x-1,y) != BLACK) {
+							madeChange = true;
+							bmp.setPixel(x-1,y,0xffffff00);
+						}
+						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x,y+1) != BLACK) {
+							bmp.setPixel(x,y+1,0xffffff00);
+							madeChange = true;
+						}
+						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x,y-1) != BLACK) {
+							madeChange = true;
+							bmp.setPixel(x,y-1,0xffffff00);
+						}
+					}
+				}
+			}
+
+/*			var failsafeCounter = 50;
+			var cont = true;
+			while (cont) {
+				failsafeCounter--;
+				if (failsafeCounter == 0) {
+					trace('failsafe triggered');
+					break;
+				}
+
+				var before = bmp.clone();
+				bmp.copyPixels(
+					bmp,
+					new Rectangle(xPos, yPos, width, height),
+					new Point(int(Math.random() * 32), int(Math.random() * 32)),
+					null, new Point(0,0), true						
+				);
+//				bmp.fillRect(new Rectangle(0, 0, 32, 32), 0xffffff00);
+				cont = identicalBitmaps(bmp, before);
+			}*/
+		}
+
 		public function makeMutant() {
 
-			// Should also see that it really changed
+/*			// Should also see that it really changed
 
 			// Copy random areas around but don't allow disconnection
 			var cont = true;
@@ -139,8 +199,10 @@ package {
 				}
 				disconnected = !isConnected(bmp);
 			}
-
-			return new Creature(bmp, amplitudes, frequencies, phases);
+*/
+			var mutatedBmp = bitmapdata.clone();
+			mutate(mutatedBmp);
+			return new Creature(mutatedBmp, amplitudes, frequencies, phases);
 		}
 
 		public function getAmplitude(i) {

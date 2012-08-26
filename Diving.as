@@ -49,7 +49,7 @@ package {
 
 		// How to put simulations of this kind next to each other
 		override public function layout(i) {
-			return new Point(150 + i * 200, 100)
+			return new Point(150 + i * 200, 101 + 15)
 		}
 	}
 }

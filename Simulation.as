@@ -14,7 +14,6 @@ package {
 		var bounciness = 0;
 		var compoScreen;
 		var musclesEnabled = true;
-		var FRICTION_THRESHOLD = 1.5;
 		var FRICTION = 0.4;
 		var SPRING_BREAK_THRESHOLD = 0.7;
 		var uniformMass = false;
@@ -25,6 +24,8 @@ package {
 		var BREAK_EXPLOSION = 0.5;
 		var hasTouchedGround = false;
 		var margin = 5;
+		var FRICTION_THRESHOLD = 1.5 + margin;
+		var yOffset = 0;
 
 		// How to visually put simulations of this kind next to each other
 		public function layout(i) {
@@ -75,7 +76,7 @@ package {
 						map_xy_to_vertex[mapStr] = index;
 
 						vertices.push(
-							{'x' : x, 'y' : y, 'sprite' : 0, 'mass' : mass}
+							{'x' : x, 'y' : y + yOffset, 'sprite' : 0, 'mass' : mass}
 						);
 					}
 				}
@@ -267,7 +268,7 @@ package {
 		}
 
 		public function render() {
-			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0/*0xff577AB1*/);
+			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0x33000000/*0xff577AB1*/);
 			for (var i = 0; i < vertices.length; i++) {
 				var vertex = vertices[i];
 				buffer.copyPixels(
