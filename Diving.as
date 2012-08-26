@@ -12,11 +12,12 @@ package {
 
 		override public function setPrefs() {
 			this.musclesEnabled = true;
-			this.gravity = 1;
-			this.bounciness = 1.2;
+			this.gravity = 1.6;
+			this.bounciness = 1;
 			this.uniformMass = true;
 			this.doBlueConnections = false;
 			this.SPRING_BREAK_THRESHOLD = 0.875;
+			this.xOffset = 5;
 		}
 
 		// Not known until timeout
@@ -52,7 +53,7 @@ package {
 
 		// How to put simulations of this kind next to each other
 		override public function layout(i) {
-			return new Point(150 + i * 200, 101 + 15)
+			return new Point(150 + i * 200 + 40, 101 + 15 + 15)
 		}
 	}
 }

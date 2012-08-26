@@ -26,6 +26,7 @@ package {
 		var margin = 5;
 		var FRICTION_THRESHOLD = 1.5 + margin;
 		var yOffset = 0;
+		var xOffset = 0;
 
 		// How to visually put simulations of this kind next to each other
 		public function layout(i) {
@@ -80,7 +81,7 @@ package {
 						map_xy_to_vertex[mapStr] = index;
 
 						vertices.push(
-							{'x' : x, 'y' : y + yOffset, 'sprite' : 0, 'mass' : mass}
+							{'x' : x + xOffset, 'y' : y + yOffset, 'sprite' : 0, 'mass' : mass}
 						);
 					}
 				}
@@ -158,6 +159,15 @@ package {
 				var by = vertices[spring['b']]['y'];
 				spring['desiredDistance'] = Math.sqrt((ax-bx)*(ax-bx) + (ay-by)*(ay-by));
 			}
+
+			trace("Made " + springs.length + ' springs and ' + vertices.length + ' vertices.');
+		}
+
+		public function applyGravity() {
+			for (var i = 0; i < vertices.length; i++) {
+				var vertex = vertices[i];
+				vertex['y'] += gravity * vertex['mass']; // hey it's what people used to believe!
+			}
 		}
 
 		public function tick() {
@@ -166,11 +176,7 @@ package {
 			var i, vertex, ax, ay, bx, by;
 			tickCounter++;
 
-			// Apply gravity
-			for (i = 0; i < vertices.length; i++) {
-				vertex = vertices[i];
-				vertex['y'] += gravity * vertex['mass']; // hey it's what people used to believe!
-			}
+			applyGravity();
 
 			// Springs
 			for (i = 0; i < springs.length; i++) {
@@ -268,11 +274,15 @@ package {
 		}
 
 		public function isWinner() {
-			return fitness() >= 500 - margin;
+			return fitness() >= buffer.width - margin;
+		}
+
+		public function renderBackground() {
+			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0xff45618D);
 		}
 
 		public function render() {
-			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height), 0x33000000/*0xff577AB1*/);
+			renderBackground();
 			for (var i = 0; i < vertices.length; i++) {
 				var vertex = vertices[i];
 				buffer.copyPixels(
@@ -283,6 +293,7 @@ package {
 					new Point(0,0),
 					true
 				);
+//				buffer.setPixel(spritesheetBitmapData, new Point(vertex['x'] - 32/2, vertex['y'] - 32/2), 0xff000000);
 			}
 		}
 

@@ -109,18 +109,47 @@ package {
 			var width = int(Math.random() * (32 - xPos));
 			var height = int(Math.random() * (32 - yPos));
 */
+			var mutant = bmp.clone();
+			var rate = 0.95;
+
 			// Extend random corner points
 			var madeChange = false;
 			while (!madeChange) {
-				for (var y = 2; y < 28; y++) {
+				for (var y = 2; y < 31; y++) {
 					for (var x = 2; x < 28; x++) {
-//						if (Math.random() < 0.95) continue;
-						trace(bmp.getPixel32(x+1,y));
-						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x+1,y) != BLACK) {
-							madeChange = true;
-							bmp.setPixel(x+1,y,0xffffff00);
+						if (!(bmp.getPixel32(x,y) && 0xff000000)) continue;
+
+						if (Math.random() < rate) continue;
+
+						var edible = 
+							((bmp.getPixel32(x-1,y+1) && 0xff000000) || (bmp.getPixel32(x,y+1) && 0xff000000) || (bmp.getPixel32(x+1,y+1) && 0xff000000)) ||
+							((bmp.getPixel32(x-1,y+1) && 0xff000000) || (bmp.getPixel32(x-1,y) && 0xff000000) || (bmp.getPixel32(x-1,y-1) && 0xff000000)) ||
+							((bmp.getPixel32(x-1,y-1) && 0xff000000) || (bmp.getPixel32(x,y-1) && 0xff000000) || (bmp.getPixel32(x+1,y-1) && 0xff000000)) ||
+							((bmp.getPixel32(x+1,y+1) && 0xff000000) || (bmp.getPixel32(x+1,y) && 0xff000000) || (bmp.getPixel32(x+1,y-1) && 0xff000000));
+
+						// Randomly eat some flesh, but only if after doing that connections still remain.
+						if (edible && Math.random() < 0.5) {
+							mutant.setPixel32(x,y,0x00000000);
+						} else {
+							if (!(bmp.getPixel32(x+1,y) && 0xff000000)) { 
+								madeChange = true;
+								mutant.setPixel32(x+1,y,0xff000000);
+							}
+							if (!(bmp.getPixel32(x-1,y) && 0xff000000)) { 
+								madeChange = true;
+								mutant.setPixel32(x-1,y,0xff000000);
+							}
+							if (!(bmp.getPixel32(x,y+1) && 0xff000000)) { 
+								madeChange = true;
+								mutant.setPixel32(x,y+1,0xff000000);
+							}
+							if (!(bmp.getPixel32(x,y-1) && 0xff000000)) { 
+								madeChange = true;
+								mutant.setPixel32(x,y-1,0xff000000);
+							}
 						}
-						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x-1,y) != BLACK) {
+
+/*						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x-1,y) != BLACK) {
 							madeChange = true;
 							bmp.setPixel(x-1,y,0xffffff00);
 						}
@@ -131,10 +160,12 @@ package {
 						if (bmp.getPixel32(x,y) == BLACK && bmp.getPixel32(x,y-1) != BLACK) {
 							madeChange = true;
 							bmp.setPixel(x,y-1,0xffffff00);
-						}
+						}*/
 					}
 				}
 			}
+
+			bmp.copyPixels(mutant, new Rectangle(0, 0, mutant.width, mutant.height), new Point(0,0 ));
 
 /*			var failsafeCounter = 50;
 			var cont = true;
