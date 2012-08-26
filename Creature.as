@@ -25,8 +25,8 @@ package {
 			this.phases = [];
 
 			for (var i = 0; i < 100; i++) {
-				this.amplitudes.push(Math.random() * Math.random() * Math.random() * 50);
-				this.frequencies.push(Math.random() * 0.3);
+				this.amplitudes.push(Math.random() * Math.random() * 30);
+				this.frequencies.push(Math.random() * 0.1);
 				this.phases.push(Math.random() * Math.PI * 2);
 			}
 		}
