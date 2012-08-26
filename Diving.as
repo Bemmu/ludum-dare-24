@@ -7,6 +7,9 @@ package {
 			super(buffer, spritesheetBitmapData, creature);
 		}
 
+		override public function configureCompoScreen(compoScreen) {
+		}
+
 		override public function setPrefs() {
 			this.musclesEnabled = true;
 			this.gravity = 1;

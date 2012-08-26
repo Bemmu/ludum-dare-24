@@ -40,6 +40,10 @@ package {
 		public function setPrefs() {			
 		}
 
+		// Opportunity to change track layout
+		public function configureCompoScreen(compoScreen) {
+		}
+
 		public function Simulation(buffer:BitmapData, spritesheetBitmapData:BitmapData, creature:Creature) {
 			setPrefs();
 

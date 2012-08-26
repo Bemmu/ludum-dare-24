@@ -18,5 +18,8 @@ package {
 			yOffset = 5;
 			FRICTION = 0.1;
 		}
+
+		override public function configureCompoScreen(compoScreen) {
+		}
 	}
 }
