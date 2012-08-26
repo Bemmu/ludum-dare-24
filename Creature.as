@@ -233,7 +233,7 @@ package {
 */
 			var mutatedBmp = bitmapdata.clone();
 			mutate(mutatedBmp);
-			return new Creature(mutatedBmp, amplitudes, frequencies, phases);
+			return new Creature(mutatedBmp/*, amplitudes, frequencies, phases*/);
 		}
 
 		public function getAmplitude(i) {

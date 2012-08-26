@@ -13,10 +13,11 @@ package {
 		}
 
 		override public function setPrefs() {
-			xPush = 1.2;
+			xPush = 1.5;
 			yPush = -0.7;
 			yOffset = 5;
 			FRICTION = 0.1;
+			bounciness = 0.3;
 		}
 
 		override public function configureCompoScreen(compoScreen) {

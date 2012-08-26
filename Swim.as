@@ -9,7 +9,7 @@ package {
 
 		public function Swim(buffer:BitmapData, spritesheetBitmapData:BitmapData, creature:Creature) {
 			var waveHeight = 20;
-			waterBmp = new BitmapData(buffer.width, buffer.height);
+			waterBmp = new BitmapData(buffer.width*2, buffer.height);
 			for (var y = 0; y < waterBmp.height; y++) {
 				for (var x = 0; x < waterBmp.width; x++) {
 					var red = 0;
@@ -27,10 +27,11 @@ package {
 		}
 
 		override public function setPrefs() {
-			xPush = 1.2;
-			yPush = -0.7;
-			yOffset = 5;
+/*			xPush = 1.2;
+			yPush = -0.7;*/
+			yOffset = 6;
 			FRICTION = 0.1;
+			gravity = 1.2;
 		}
 
 		override public function applyGravity() {
@@ -40,7 +41,12 @@ package {
 				if (aboveWater) {
 					vertex['y'] += gravity * vertex['mass']; // hey it's what people used to believe!
 				} else {
-					vertex['y'] -= gravity * vertex['mass']; // hey it's what people used to believe!
+					vertex['y'] -= gravity * vertex['mass']; // buoyancy
+				}
+
+				// Let's give some boost at water level
+				if (Math.abs(vertex['y'] - buffer.height/2) < 5) {
+					vertex['x'] += 0.02;
 				}
 			}
 		}
@@ -50,8 +56,8 @@ package {
 
 		override public function renderBackground() {
 			buffer.fillRect(new Rectangle(0, 0, buffer.width, buffer.height / 2), 0xff45618D);
-			buffer.fillRect(new Rectangle(0, buffer.height / 2, buffer.width, buffer.height / 2), 0xff2521AD);
-			waterFilter = new DisplacementMapFilter(waterBmp, new Point(Math.sin(tickCounter*0.1)*20,0), 1, 2, 50, 50, 'clamp');
+			buffer.fillRect(new Rectangle(0, buffer.height / 2 - 20, buffer.width, buffer.height / 2 + 20), 0xff2521AD);
+			waterFilter = new DisplacementMapFilter(waterBmp, new Point((0.5+0.5*Math.sin(tickCounter*0.1))*20-40, 0), 1, 2, 50, 50, 'clamp');
 			buffer.applyFilter(buffer, new Rectangle(0, 0, buffer.width, buffer.height), new Point(0, 0), waterFilter);
 			waterFilter = null;
 		}
